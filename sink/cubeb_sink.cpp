@@ -65,7 +65,8 @@ public:
         u32 minimum_latency{0};
         const auto latency_error = cubeb_get_min_latency(ctx, &params, &minimum_latency);
         if (latency_error != CUBEB_OK) {
-            LOG_CRITICAL(Audio_Sink, "Error getting minimum latency, error: {}", latency_error);
+            // CUBEB_ERROR_NOT_SUPPORTED (-4) is expected on some backends (e.g. AAudio/OpenSL) which don't report a minimum latency, fall back to the target sample count
+            LOG_INFO(Audio_Sink, "Minimum latency unavailable (error: {}), using fallback latency", latency_error);
             minimum_latency = TargetSampleCount * 2;
         }
 
@@ -361,7 +362,8 @@ u32 GetCubebLatency() {
     u32 latency{0};
     const auto latency_error = cubeb_get_min_latency(ctx, &params, &latency);
     if (latency_error != CUBEB_OK) {
-        LOG_CRITICAL(Audio_Sink, "Error getting minimum latency, error: {}", latency_error);
+        // CUBEB_ERROR_NOT_SUPPORTED (-4) is expected on some backends, fall back to the target sample count
+        LOG_INFO(Audio_Sink, "Minimum latency unavailable (error: {}), using fallback latency", latency_error);
         latency = TargetSampleCount * 2;
     }
     latency = std::max(latency, TargetSampleCount * 2);
